@@ -1,4 +1,4 @@
-ownload.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", destfile = "NEI_data.zip")
+download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", destfile = "NEI_data.zip")
 unzip("NEI_data.zip")
 
 NEI <- readRDS("summarySCC_PM25.rds")
