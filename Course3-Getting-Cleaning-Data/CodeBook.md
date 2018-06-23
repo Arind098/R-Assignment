@@ -51,7 +51,7 @@ A logical vector was created identifying TRUE for the ID, mean & stdev columns a
 'activity_labels.txt' was merged with the subsetted data to add descriptive activity names to merged and subsetted data set. Values in 'activityId' column were then replaced with the matching values from the 'activityType' column in order to make the data easier to read. 
 
 ## 4. APPROPRIATELY LABEL DATA SET WITH DESCRIPTIVE ACTIVITY NAMES
-Used the 'gsub' function to clean up the column names in merged & subsetted data set. 'activityType' column removed in order to tidy data further.
+Used the 'grepl' function to clean up the column names in merged & subsetted data set.
 
 ## 5. INDEPENDNENT TIDY DATA SET CREATED WITH AVERAGE FOR EACH VARIABLE & EACH SUBJECT
-New table was created which contains average for each variable for each activity and subject.
+New table was created which contains average for each variable for each activity and subject repectively.
