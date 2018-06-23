@@ -1,10 +1,8 @@
 # GETTING AND CLEANING DATA WEEK 4 PROJECT
-Ruben Jongstra
+Arind Mishra
 
 ## Description
-This code book summarizes the data and variables in tidyData.txt -- this is the
-output of the Week 4 project in the JHU course Getting & Cleaning Data while providing
-information on the Data Set and Attributes used from the original study
+This code book summarizes the data and variables in tidyData.txt -- this is final data set obtained  at the end of the Week 4 project in the JHU course Getting & Cleaning Data while providing information on the Data Set and Attributes used from the original study.
 
 # INFORMATION
 
