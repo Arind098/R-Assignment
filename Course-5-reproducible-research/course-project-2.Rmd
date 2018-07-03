@@ -1,0 +1,112 @@
+---
+title: "course-project-2"
+author: "Arind"
+date: "25 June 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Synopsis
+
+The basic goal of this assignment is to explore the NOAA Storm Database and analyze the severity of the severe weather events. This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+# Data
+
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size, which can be downloaded [here](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2).
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+# Data Processing
+
+For calculating th impact to population we consider the aggregation of both "FATALITIES & INJURIES" column.
+
+## Loading and preparing the data
+
+1. Extracting and loading the data
+```{r, echo=TRUE}
+library(dplyr)
+## download the data file.
+#download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2",
+#              destfile = "stormData.csv.bz2")
+
+## Read tne data to R
+stormData <- read.csv("stormData.csv.bz2", header = TRUE)
+
+```
+
+2. The next step is to extract rows corresponding to the event from the documentation, We will also choose the columns which are relevant to our analysis:
++ EVTYPE
++ FATALITIES
++ INJURIES
++ PROPDMG
++ PROPDMGEXP
++ CROPDMG
++ PROPDMGEXP
+
+```{r, echo = TRUE}
+reqStormData <- stormData %>% select(EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP)
+```
+
+3. Make a new dataset with total casualties calculated
+
+```{r, echo = TRUE}
+stormEvents <- reqStormData %>% group_by(EVTYPE) %>% 
+                  summarize(FATALITIES = sum(FATALITIES, na.rm = TRUE), 
+                          INJURIES = sum(INJURIES, na.rm = TRUE), TOTAL = FATALITIES + INJURIES) %>%
+                  arrange(desc(TOTAL))
+```
+
+4. Cosider the order of magnitude of property and crop damage (H = hundreds, K = thousands, M = millions, B= billions)
+
+```{r, echo = TRUE}
+# convert letters exponents into integers
+reqStormData[(reqStormData$PROPDMGEXP == "K" | reqStormData$PROPDMGEXP == "k"), ]$PROPDMGEXP <- 3
+reqStormData[(reqStormData$PROPDMGEXP == "M" | reqStormData$PROPDMGEXP == "m"), ]$PROPDMGEXP <- 6
+reqStormData[(reqStormData$PROPDMGEXP == "B" | reqStormData$PROPDMGEXP == "b"), ]$PROPDMGEXP <- 9
+reqStormData[(reqStormData$CROPDMGEXP == "K" | reqStormData$CROPDMGEXP == "k"), ]$CROPDMGEXP <- 3
+reqStormData[(reqStormData$CROPDMGEXP == "M" | reqStormData$CROPDMGEXP == "m"), ]$CROPDMGEXP <- 6
+reqStormData[(reqStormData$CROPDMGEXP == "B" | reqStormData$CROPDMGEXP == "b"), ]$CROPDMGEXP <- 9
+```
+
+5. Compute combined economic damage (property damage + crops damage)
+```{r, echo = TRUE}
+# multiply property and crops damage by 10 raised to the power of the exponent
+suppressWarnings(reqStormData$PROPDMG <- reqStormData$PROPDMG * 10^as.numeric(reqStormData$PROPDMGEXP))  
+suppressWarnings(reqStormData$CROPDMG <- reqStormData$CROPDMG * 10^as.numeric(reqStormData$CROPDMGEXP))
+```
+
+6. Make a new dataset with total Economic Loss calculated
+
+```{r, echo = TRUE}
+stormLoss <- stormData %>% group_by(EVTYPE) %>% 
+                  summarize(PROP_LOSS = sum(PROPDMG), CROP_LOSS = sum(CROPDMG), 
+                            ECONOMIC_LOSS = PROP_LOSS + CROP_LOSS) %>% 
+                  arrange(desc(ECONOMIC_LOSS))
+```
+# Results
+
+## * Health Impact
+
+First, we'd like to analyze which types of severe weather events are most harmful to the population.
+The maximum no.of casualties is from TORNADOS `{r stormEvents[which.max(stormEvents$Total), 1] `  
+
+### Plot the result
+
+To verify the above outcome we plot the top events with maximum casualties
+ 
+```{r, echo = TRUE}
+## Plot the total no. of casualties per event type
+library(ggplot2)
+
+ggplot(stormEvents[1:30,], aes(x = EVTYPE, y = TOTAL)) + geom_bar(stat="identity") + xlab("Event Type") + ylab("Total Casualties") + ggtitle("Harmful Events") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## * Economic Impact
+
+Now let's look at the economic impact. First we need to calculate the total economic cost of each event. Multipliers need to be applied to the damage amounts according to the codes in the 'EXP' fields.
+```{r, echo=TRUE}
+ggplot(stormLoss[1:20, ], aes(EVTYPE, economic_loss)) + geom_bar(stat = "identity") + xlab("Event Type") + ylab("Total Economic Loss") + ggtitle("Storm Economics") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
