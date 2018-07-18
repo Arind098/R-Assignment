@@ -1,0 +1,122 @@
+---
+title: "Course Progetct - Automatic Vs Manual transmission"
+author: "Arind"
+date: "July 18, 2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+This report we will 
+
+## Exploratory Analysis
+
+The **mtcars** dataset is in the package ggplot2, hence we load the package ggplot2 into our environment. The data set consists of a data frame with 32 observations (nrow) and 11 variables (ncol).
+
+* mpg: Miles per US gallon
+* cyl: Number of cylinders
+* disp: Displacement (cubic inches)
+* hp: Gross horsepower
+* drat: Rear axle ratio
+* wt: Weight (lb / 1000)
+* qsec: 1 / 4 mile time
+* vs: V/S
+* am: Transmission (0 = automatic, 1 = manual)
+* gear: Number of forward gears
+* carb: Number of carburetors
+
+### Loding and exploring the data
+```{r echo = TRUE}
+library(ggplot2) 
+data(mtcars)
+attach(mtcars) ## attaching the mtcars name to the R searchspace
+head(mtcars)
+str(mtcars)
+summary(mtcars$mpg)
+```
+
+The variable "am" in mtcars represents the transmission mode of the vehicle i.e "1" for Manual and "0" for automatic transmission.
+
+Let's convert the "am" variable to a factor variable replacing the binary 1 & 0 with "Auto" and "Manual" respectively.
+
+```{r echo = TRUE}
+mtcars$am <- factor(ifelse(mtcars$am == 1, "Manual", "Auto"))
+```
+
+Now lets visualize the transmission parameters:
+```{r echo = TRUE}
+ggplot(aes(x=am, y=mpg), data=mtcars) +
+  geom_boxplot(aes(fill=am)) +
+  labs(title = "Automatic vs Manual Transmission Boxplot") +
+  xlab("Transmission Type") +
+  ylab("MPG") +
+  guides(fill=guide_legend(title="Transmission\nType"))
+```
+
+The boxplot above clearly indicates that manual transmissions provide better gas mileage than automatics. To test this claim, a hypothesis test should be performed that rejects the null hypothesis, i.e., that the transmission type is in fact significantly correlated to gas mileage.
+
+```{r echo = TRUE}
+Auto <- mtcars[mtcars$am == "Auto",]
+Manual <- mtcars[mtcars$am == "Manual",]
+t.test(Auto$mpg, Manual$mpg)
+```
+From the above we can see that the avg. Mileage is greater for Manual transmission type. Also from the t-test we get a significant p-value hence we accept the alternate hypothesis that the mileage for both the transmisson type is not equal.
+
+## Regression Analysis
+
+In this section, we start building linear regression models based on the different variables and try to find out the best model fit and compare it with the base model which we have using anova. After model selection, we also perform analysis of residuals.
+
+Let's create multivariable models and select the best out of them through
+**ANOVA**.
+
+* **Base Model**
+```{r echo = TRUE}
+base_mdl <- lm(mpg~am, data = mtcars)
+```
+
+* **Finding the significant features through analysis of variance (aov)**
+```{r echo = TRUE}
+var <- aov(mpg~., data = mtcars)
+summary(var)
+```
+From the above Analysis of Variance, we can look for p-values which are less than .05. This gives us cyl, disp, and wt to consider in addition to transmission type (am) as the fetures to be considered for a better fitting model
+
+* **Better Fit Model**
+```{r echo = TRUE}
+better_fit_mdl <- lm(formula = mpg ~ cyl + hp + wt + am, data = mtcars)
+anova(base_mdl, better_fit_mdl)
+```
+
+From the very significant p-value of 5.034e-08, we can claim the better Fit model is significantly better than our base model. Further we check the residual plot for non-normality.
+
+* **Residual Plot and Analysis**
+```{r echo=TRUE}
+par(mfrow = c(2,2))
+plot(better_fit_mdl)
+summary(better_fit_mdl)
+```
+
+From the above plots, we can make the following inference,
+
+* The points in the Residuals vs. Fitted plot seem to be randomly scattered on the plot and verify the independence condition.
+* The Normal Q-Q plot consists of the points which mostly fall on the line indicating that the residuals are normally distributed.
+* The Scale-Location plot consists of points scattered in a constant band pattern, indicating constant variance.
+
+The residuals seem to satisfy basic requirement for a linear modell to explain the variation of the variable "mpg".
+
+## Conclusion
+
+Based on the observations from our best fit model, we can now answer the following questions
+
+* **Is an automatic or manual transmission better for MPG**
+
+From all the analysis performed, it is clear that the cars with Manual transmission get more miles per gallon compared aganist cars with Automatic transmission.
+
+* **Quantify the MPG difference between automatic and manual transmissions**
+
+Analysis shows that when only transmission was used in the model manual cars have an mpg increase of 7.245. However, when variables wt and hp are included, the manual car advantage drops to 1.48 with other variables contributing
