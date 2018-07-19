@@ -1,0 +1,88 @@
+---
+title: "Course6-Project"
+author: "Arind"
+date: "July 19, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+In this course project of the statistical inference class from Coursera, we investigate the **Exponential Distribution** in **R** and aply the **Central Limit Theorem** to a thousand mean simulations.
+The formula for exponential distribution is given below.
+$$f(x) = \lambda e^{-\lambda x},\ where\  \ \lambda = rate\ \ paramenter$$
+*Both the theoritical mean($\mu$) and the standard deviation($\sigma$) for this distribution is $1/\lambda$.*
+
+The project illustrates via simulation and associated explanatory text the properties of the distribution of the mean of 40 exponentials and simulating it 1000 times.
+
+
+## Simulations
+
+Here, A 1000 simulations, each with 40 samples of an exponential distribution. The mean and variance of of those 40 samples will be calculated and compared to the theoretical estimates. **Central limit theorem** states that as the number in the sample increases or the number of simulations increase, the sample mean and variance should more accurately represent the theoretical estimate.
+
+```{r echo = TRUE}
+set.seed(99)
+lambda <- 0.2 # the rate parameter lambda as instructed
+n <- 40 # no. of exponentials
+sim <- 1000 # no. of simulations
+```
+
+For each simulation the mean and the varianceis is computed.
+```{r echo = TRUE}
+sim.mean <- sim.var <- NULL
+for(i in 1:sim) {
+  sim.mean <- c(sim.mean, mean(rexp(n,lambda))) # means of each simulations
+}
+sim.data <- data.frame("simulations" = 1:sim, sim.mean)
+```
+
+Next, the average of the mean and the variance across all 1000 simulations is calculated.
+
+```{r echo = TRUE}
+t.mean = 1/lambda
+p.mean = mean(sim.mean)
+t.var = (1/lambda)^2/n
+p.var = var(sim.mean)
+```
+
+In these simulations the average of the sample means is `r p.mean`, and the theoretical mean is `r t.mean`. The average of the sample variances is `r p.var`, and the theoretical variance is `r t.var`. We can see that they are very close.
+
+## Sample Mean versus Theoretical Mean
+
+From CLT, we know the theoretical mean of an exponential distribution is 1 / lambda. Given lambda of 0.2, the theoretical mean is 5 (theoretical mean = 1 / 0.2). In comparison, calculation below shows that the simulated mean is `r p.mean`, which conforms to the expected theoretical mean value as provided by the CLT.
+We can plot the above findings as.
+```{r echo = TRUE}
+library(ggplot2)
+ggplot(sim.data, aes(x = sim.mean)) +
+  geom_histogram(aes(y = ..density..), alpha = 0.8) +
+  stat_density(geom = "line", color = "blue", size =1.5, alpha = 0.6) +
+  geom_vline(xintercept = t.mean, color="red", size=1) +
+  geom_vline(xintercept = p.mean, color="cyan", size=1, linetype=2) +
+  labs(x="mean of 40 simulated exponential sample", y= "Frequecy", 
+         title="Simulated Exponential Samples Means")
+```
+
+## Sample Variance versus Theoretical Variance
+
+From CLT, we know the theoretical standard deviation of the mean is $1/(\lambda * \sqrt n)$ and the variance is $1/(\lambda ^2 *n)$.
+
+As shown in the output below, the simulated variance of the means and the theoretical variance are close, further validating CLT.
+
+* Theoritical variance is `r t.var`
+* Sample variance of the sample is `r p.var`
+
+## Distribution
+
+To check if the distributin is normal or not, we plot the Q-Q Normal plot.
+
+```{r echo = TRUE}
+qqnorm(sim.mean)
+qqline(sim.mean, col = "red", lwd = 2)
+```
+
+From the Q-Q Plot it is evident that the distribution is nearly normal.

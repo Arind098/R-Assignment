@@ -1,0 +1,100 @@
+---
+title: "Course6-Project-part2"
+author: "Arind"
+date: "July 19, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This project will examine the dataset entitled: "The Effect of Vitamin C on Tooth Growth in Guinea Pigs". Per the course project instructions, the following items should occur:
+
+* Load the ToothGrowth data and perform some basic exploratory data analyses
+* Provide a basic summary of the data.
+* Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.
+* State your conclusions and the assumptions needed for your conclusions.
+
+## Data Preparation and Analysis
+```{r echo = TRUE}
+library(ggplot2)
+# Load ToothGrowth data
+data("ToothGrowth")
+
+head(ToothGrowth)
+
+# Display a summary of the data
+summary(ToothGrowth)
+
+#Breakdown of supplement types vs dosage levels:
+table(ToothGrowth$dose, ToothGrowth$supp)
+
+#Visualization (Supplement type):
+ggplot(aes(x=supp, y=len), data=ToothGrowth) +
+  geom_boxplot(aes(fill=supp)) +
+  labs(title = "Supplement Vs. Tooth length") +
+  xlab("Supplement Type") +
+  ylab("Tooth Length") +
+  labs(fill = "Legend")
+
+#Visualization (Dosage level):
+ggplot(aes(x = factor(dose), y = len), data = ToothGrowth) +
+  geom_boxplot(aes(fill = factor(dose))) +
+  labs(title = "Dosage Vs. Tooth Length") +
+  xlab("Dosage Level") +
+  ylab("Tooth Length") +
+  labs(fill = "Legend")
+```
+
+From the above plots, it can be interpreted that supplement **Orange juice (OJ)** is more effective than **ascorbic acid(VC)** and in the case of dose levels we see that the length of the tooth increases with the increase of the dosage levels.
+
+## Hypothesis Testing.
+
+### Hypothesis 1
+In this hypothesis we assume that the length of the tooth dpends equally on the two delivery methods. i.e
+$H_0$ : Both group have the same mean.
+$H_a$: both groups have different means.
+
+```{r echo = TRUE}
+# run t-test
+t.test(len~supp,data=ToothGrowth)
+```
+The p-value of this test was 0.06.
+Since the p-value is greater than 0.05 and the confidence interval of the test contains zero we can say that supplement types seems to have no impact on Tooth growth based on this test.
+
+### Hypothesis 2
+In this we are going to check whether higher doses of vitamin C cause less tooth growth.
+
+$H_0$: Mean of all the dosage levels are equal.
+$H_a$: Mean of all the dosage levels are not equal.
+
+```{r echo = TRUE}
+dose1 <- subset (ToothGrowth, dose %in% c(0.5, 1.0)) 
+dose2 <- subset (ToothGrowth, dose %in% c(0.5, 2.0)) 
+dose3 <- subset (ToothGrowth, dose %in% c(1.0, 2.0))
+
+#Hypothesis test to check factor significance of dosage levels - 0.5 vs 1.0:
+t.test(len ~ dose, data = dose1)
+#Hypothesis test to check factor significance of dosage levels - 0.5 vs 2.0:
+t.test(len ~ dose, data = dose2)
+#Hypothesis test to check factor significance of dosage levels - 1.0 vs 2.0:
+t.test(len ~ dose, data = dose3)
+```
+
+#### Conclusion
+Since the p-values in all the above hypothesis are less than the significance level and the confidence interval does not contain 0, there is enough evidence to reject the null hypothesis. Therefore, higher doses have impact result in greater tooth growth.
+
+## Overall conclusion and Assumptions
+From the **t-test** we can conclude that:
+
+* application method has no bearing on thooth growth
+* increasing dosage results increases tooth growth
+
+Assumptions,
+
+* The sample is representative of the population, and the variables under considerations are iid.
