@@ -1,0 +1,25 @@
+---
+title: "Project2"
+author: "Arind"
+date: "July 25, 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Differences in Iris
+
+In this report we are going to create a 3-D plot of dimensions of different petals in the Iris dataset.
+
+##
+```{r, echo = TRUE}
+library(plotly)
+attach(iris)
+
+#Plotting the Iris dataset in 3D
+plot_ly(x=Sepal.Length,y=Sepal.Width,z=Petal.Length,type="scatter3d",mode='markers',size=Petal.Width,color=Species)
+```
+
+
