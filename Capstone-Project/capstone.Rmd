@@ -1,0 +1,296 @@
+---
+title: "Word Prediction - A Capstone Project Report"
+author: "Arind"
+date: "September 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+<style>
+  .flat-table {
+    display: block;
+    font-family: sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 115%;
+    overflow: auto;
+    width: auto;
+  }
+  thead {
+    background-color: rgb(112, 196, 105);
+    color: white;
+    font-weight: normal;
+    padding: 20px 30px;
+    text-align: center;
+  }
+  tbody {
+    background-color: rgb(238, 238, 238);
+    color: rgb(111, 111, 111);
+    padding: 20px 30px;
+  }
+</style>
+
+## Introduction
+
+The purpose of this project is to develop a NLP model that can simulate the Swift-key word prediction. For this purpose have 3 sources of text corpus to work with
+viz. twitter, news and blogs. To build a successful NLP model we will work in folowing stages.
+
++ Loading and Preprocessing the data
++ Perform some exploratory analysis
++ Build a NLP model based on either Markoff chain and Back off Algorithm
++ Train the model
++ Validate the model and assess the accuracy
++ Build a Shiny application to demonstrate the working of the model
+	
+In this report we will focus only on the Preprocessing and Exploratory analysis of the data.
+
+## Preprocessing and Cleaning Data
+
+**Installing the required packages**
+```{r, ehco = TRUE, eval=TRUE, message=FALSE}
+required.packages <- c("ggplot2", "quanteda", "readr", "stringr", "kableExtra")
+
+for (pakg in required.packages) {
+  if (pakg %in% installed.packages()){
+    require(pakg, character.only = TRUE)
+  } else {
+    install.packages(pakg)
+    require(pakg, character.only = TRUE)
+  }
+}
+```
+
+
+There are 3 sources for textual data provided in the link [here](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip). After unzipping the file we get 3 text files of Twitter, news and blogs data.
+
+**Loading the data**
+```{r echo=TRUE, eval=TRUE, cache=TRUE}
+#Creating connection to Twitter data from Swift Key Corp.
+twitterData <- read_lines("./Coursera-SwiftKey/final/en_US/en_US.twitter.txt")
+
+
+#Creating connection to News data from Swift Key Corp.
+newsData <- read_lines("./Coursera-SwiftKey/final/en_US/en_US.news.txt")
+
+
+#Creating connection to blog data from Swift Key Corp.
+blogData <- read_lines("./Coursera-SwiftKey/final/en_US/en_US.blogs.txt")
+```
+
+**Take a Peek **
+
+After successfully loading the data into the R session, we take a cursory glance at the data.
+
+```{r, results='asis', echo=FALSE, eval=TRUE}
+news.length <- length(newsData)
+blogs.length <- length(blogData)
+twitter.length <- length(twitterData)
+
+news.char <- sum(nchar(newsData))
+blogs.char <- sum(nchar(blogData))
+twitter.char <- sum(nchar(twitterData))
+
+news.words <- sum(str_count(newsData, '\\w+'))
+blogs.words <- sum(str_count(blogData, '\\w+'))
+twitter.words <- sum(str_count(twitterData, '\\w+'))
+
+news.mem <- object.size(newsData)
+blogs.mem <- object.size(blogData)
+twitter.mem <- object.size(twitterData)
+
+tab <- data.frame("Words" = c(news.words, blogs.words, twitter.words),
+                  "Charaters" = c(news.char, blogs.char, twitter.char),
+                  "Lines" = c(news.length, blogs.length, twitter.length),
+                  "Memory" = c(news.mem, blogs.mem, twitter.mem))
+
+row.names(tab) <- c("News", "Blogs", "Twitter")
+```
+
+```{r echo=FALSE, eval=TRUE}
+kable(tab) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+As we can see that the amount of data to be processed is huge, so we take sample data (about 5000 lines) from the raw data to create our corpus.
+
+**Creating sample corpus**
+```{r echo=TRUE, eval=TRUE, cache=TRUE}
+# Creating sample data from Twitter, News and blogs
+
+nlines <- 5000
+
+tweets <- sample(twitterData, nlines, replace = FALSE)
+news <- sample(newsData, nlines, replace = FALSE)
+blogs <- sample(blogData, nlines, replace = FALSE)
+
+# Removing the original datasets from the memory
+
+rm(twitterData, newsData, blogData)
+gc()
+```
+
+Lets explore the sampled data and see whether we can work with this corpus.
+
+```{r echo=FALSE, eval=TRUE, cahce=TRUE}
+news.length <- length(news)
+blogs.length <- length(blogs)
+twitter.length <- length(tweets)
+
+news.char <- sum(nchar(news))
+blogs.char <- sum(nchar(blogs))
+twitter.char <- sum(nchar(tweets))
+
+news.words <- sum(str_count(news, '\\w+'))
+blogs.words <- sum(str_count(blogs, '\\w+'))
+twitter.words <- sum(str_count(tweets, '\\w+'))
+
+news.mem <- object.size(news)
+blogs.mem <- object.size(blogs)
+twitter.mem <- object.size(tweets)
+
+tab <- data.frame("Words" = c(news.words, blogs.words, twitter.words),
+                  "Charaters" = c(news.char, blogs.char, twitter.char),
+                  "Lines" = c(news.length, blogs.length, twitter.length),
+                  "Memory" = c(news.mem, blogs.mem, twitter.mem))
+
+row.names(tab) <- c("News", "Blogs", "Twitter")
+```
+
+```{r echo=FALSE, eval=TRUE}
+kable(tab) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+The sampled corpus is of ideal size and consumes less memeory to process. We then combine all the sources of data to create a single large combined corpus to make 1,2,3,4 tokens clea tokens
+
+**Cleaning Corpus & Creating tokens using QUANTEDA**
+
+To create a tooken object and clean the tokens we will use R's **Quanteda** package against the more popular **tm** and **tidytext** packages for text minnig. The quanteda pakage supports multi-threading and is generally fast compared to the **tm** package.
+
+The following text cleaning is performed.
+
+- Remove numbers
+- Remove Punctuation
+- Remove Symbols
+- Remove Twitter( # tags)
+- Remove URL
+- Coversion to lowercase
+- Remove Profane words
+
+I have not removed the stop words and also stemmed words as we will be comparing the user inputs (as is) with the most frequently used tokens. Doing so might lead to loss of information and might lead to incorrect word prediciton.
+
+```{r echo=TRUE, eval=TRUE, cache = TRUE}
+## Creating clean tokens
+# Tokenize tweets messages.
+
+# combining the sample data sets to make a Corpus
+sample.corpus <- as.character(c(tweets, news, blogs))
+
+sample.tokens <- tokens(sample.corpus, what = "word", 
+                       remove_numbers = TRUE, remove_punct = TRUE,
+                       remove_symbols = TRUE, remove_hyphens = TRUE,
+                       remove_separators = TRUE,remove_twitter = TRUE, 
+                       remove_url = TRUE)
+                       
+# Lower case the tokens.
+sample.tokens <- tokens_tolower(sample.tokens)
+
+# Remove profane words
+profane.words <- read_lines("./Coursera-SwiftKey/final/en_US/profane.txt")
+sample.tokens <- tokens_remove(sample.tokens, profane.words)
+```
+
+As a start, the NLP model we will use for predicting text is the N-gram model that is based on the concept of a Markov chain. Put in simpler terms, we will compute probability for one word to come after a sentence fragment with the assumption that this probability is dependent only on the n-1 preceding words. For example if chossing n=3 (tri-gram) and my sentence fragment is: "I had breakfast this.", the probability of the next word being "morning" is dependent only on the two preceding words: "breakfast" & "this". For dealing with the sparsity of text data, we will use Katz's Back-off approach as well as Good-Turing smoothing.
+
+**Create 1,2,3,4 grams from the Tokens**
+```{r echo=TRUE, eval=TRUE}
+
+# Creating N-gram tokens
+sample.1gram <- tokens_ngrams(sample.tokens, n = 1)
+sample.2gram <- tokens_ngrams(sample.tokens, n = 2)
+sample.3gram <- tokens_ngrams(sample.tokens, n = 3)
+
+# Create our first bag-of-words model.
+tokens.1gram.dfm <- dfm(sample.1gram, tolower = FALSE)
+tokens.2gram.dfm <- dfm(sample.2gram, tolower = FALSE)
+tokens.3gram.dfm <- dfm(sample.3gram, tolower = FALSE)
+
+
+# Converting into data frame
+
+dfm_to_df <- function(x) {
+     x.df <- data.frame(Content = featnames(x), Frequency = colSums(x), 
+                 stringsAsFactors = FALSE)
+     x.df <- x.df[with(x.df, order(-Frequency)),]
+     row.names(x.df) <- NULL
+     return(x.df)
+}
+
+tokens.1gram.df <- dfm_to_df(tokens.1gram.dfm)
+tokens.2gram.df <- dfm_to_df(tokens.2gram.dfm)
+tokens.3gram.df <- dfm_to_df(tokens.3gram.dfm)
+```
+
+## Exploring the Corpus
+
+The top 5 most frequently used tokens(1,2,3) is tabled below.
+
+```{r echo=FALSE, eval=TRUE}
+#kable(list(tokens.1gram.df[1:10,], tokens.2gram.df[1:10,], #tokens.3gram.df[1:10,])) %>%
+#  kable_styling(bootstrap_options = "striped")
+
+knitr::kable(tokens.1gram.df[1:10,], "html", caption = "1-gram Frequency") %>%
+  kableExtra::kable_styling(bootstrap_options = c("hover"),
+                            full_width = FALSE, position = "float_left")
+
+knitr::kable(tokens.2gram.df[1:10,], "html", caption = "2-gram Frequency") %>%
+  kableExtra::kable_styling(bootstrap_options = c("hover"),
+                            full_width = FALSE, position = "float_right")
+
+knitr::kable(tokens.3gram.df[1:10,], "html", caption = "3-gram Frequency") %>%
+  kableExtra::kable_styling(bootstrap_options = c("hover"),
+                            full_width = FALSE, position = "center")
+
+```
+
+We will now create bar plots of the 50 most occuring tokens in 1,2,3 grams tokens model.
+
+**1. Top 50 1-gram words**
+```{r echo=FALSE, eval=TRUE, fig.width=12, fig.height=10}
+par(mar=c(8,4,4,4))
+barplot(tokens.1gram.df[1:50,]$Frequency, las = 2, names.arg = tokens.1gram.df[1:50,]$Content,
+        col ="lightgreen", main ="Most frequent mono-gram words",
+        ylab = "Word frequencies")
+```
+
+**Top 50 2-gram words**
+```{r echo=FALSE, eval=TRUE, fig.width=12, fig.height=10}
+par(mar=c(8,4,4,4))
+barplot(tokens.2gram.df[1:50,]$Frequency, las = 2, names.arg = gsub("_", " ", tokens.2gram.df[1:50,]$Content),
+        col ="lightgreen", main ="Most frequent Bi-gram words",
+        ylab = "Word frequencies")
+```
+
+**Top 50 3-gram words**
+```{r echo=FALSE, eval=TRUE, fig.width=12, fig.height=10}
+par(mar=c(8,4,4,4))
+barplot(tokens.3gram.df[1:50,]$Frequency, las = 2, names.arg = gsub("_", " ", tokens.3gram.df[1:50,]$Content),
+        col ="lightgreen", main ="Most frequent Tri-gram words",
+        ylab = "Word frequencies")
+```
+
+## Next Steps
+
+After exploring the corpus and looking at the most frequent 1,2,3 tokens we notice that there are tokens which have very low frequeny which will add very little significance to the model. Hence such low frequency tokens can be removed from the 1,2,3 N-gram models to save memory and increase performance.
+
+## Predicting the Next Word
+
+After successfully cleaning and building N-grams, next word prediction model is developed based on the Kate Back-off algorithm. Here are the the steps to implement the Back-Off model.
+
+- Clean the user input which is the sequence of words by using same techniques used to clean the training data sets.
+- Extract last three or last two or the last one word depending upon the number of words given by the user.
+- If there is no match in 4-gram, back-off to 3-gram. Match the last two words of the user input with the first two words of 3-gram. If the last two words of the user input is found in the 3-gram, the third word in the 3-gram will be predicted word.
+- If there is no match in 3-gram, back-off to 2-gram. Match the last word of the user input with the first word of 2-gram. If the last word of the user input is found in the 2-gram, the second word in the 2-gram will be predicted word.
+- If there is no match in 2-gram, back-off to 1-gram. the most frequent word from 1-gram will be the predicted word.
+
