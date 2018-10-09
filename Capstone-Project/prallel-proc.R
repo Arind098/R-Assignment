@@ -22,11 +22,10 @@ for(i in 1:3) {
     for (x in l){
         data.tmp <- as.character(read_lines(files[i], skip = x, n_max = 50000))
         corpus.tmp <- tokenize(data.tmp)
-        # Create 1,2,3,4 grams
-        tokens.1gram <- ngrams(corpus.tmp, 1)
-    
         rm(data.tmp)
-    
+
+        # Create 1,2,3,4,5 grams
+        tokens.1gram <- ngrams(corpus.tmp, 1)
         df.1gram <- rbind(df.1gram, freq.df(tokens.1gram))
         print(paste("1 gram tokens for ", files[i], ".....", toString(x), " lines finished......"))
         rm(tokens.1gram)
@@ -53,17 +52,29 @@ for(i in 1:3) {
         rm(corpus.tmp)
         gc()
     }
+    write.table(df.1gram, paste(files[i], ".df.1gram.txt"),sep="\t",row.names=FALSE)
+    rm(df.1gram)
+    write.table(df.2gram, paste(files[i], ".df.2gram.txt"),sep="\t",row.names=FALSE)
+    rm(df.2gram)
+    write.table(df.3gram, paste(files[i], ".df.3gram.txt"),sep="\t",row.names=FALSE)
+    rm(df.3gram)
+    write.table(df.4gram, paste(files[i], ".df.4gram.txt"),sep="\t",row.names=FALSE)
+    rm(df.4gram)
+    write.table(df.5gram, paste(files[i], ".df.5gram.txt"),sep="\t",row.names=FALSE)
+    rm(df.5gram)
+
+    gc()
 }
 
-cmp.df.1gram <- df.1gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% arrange(desc(Tot.Freq))
+cmp.df.1gram <- df.1gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% filter(Tot.Freq != 1 ) %>% arrange(desc(Tot.Freq))
 rm(df.1gram)
-cmp.df.2gram <- df.2gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% arrange(desc(Tot.Freq))
+cmp.df.2gram <- df.2gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% filter(Tot.Freq != 1 ) %>% arrange(desc(Tot.Freq))
 rm(df.2gram)
-cmp.df.3gram <- df.3gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% arrange(desc(Tot.Freq))
+cmp.df.3gram <- df.3gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% filter(Tot.Freq != 1 ) %>% arrange(desc(Tot.Freq))
 rm(df.3gram)
-cmp.df.4gram <- df.4gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% arrange(desc(Tot.Freq))
+cmp.df.4gram <- df.4gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% filter(Tot.Freq != 1 ) %>% arrange(desc(Tot.Freq))
 rm(df.4gram)
-cmp.df.5gram <- df.5gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% arrange(desc(Tot.Freq))
+cmp.df.5gram <- df.5gram %>% group_by(Content) %>% summarize(Tot.Freq = sum(Frequency)) %>% filter(Tot.Freq != 1 ) %>% arrange(desc(Tot.Freq))
 rm(df.5gram)
 
 
