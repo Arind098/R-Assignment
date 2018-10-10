@@ -2,14 +2,28 @@
 library(shiny)
 
 # Define application ####
-
-shinyServer(function(input, output, session) {
-
+source("predict.R")
+source("functions.R")
+function(input, output, session) {
     # Predict Word
-    result <- reactive({
-        pred.backoff(freq.table, input$text)[1:input$nPred, ]
+    result <- eventReactive(input$Predict, {
+        pred.boff(input$text, input$slider)
     })
-    output$textOut <- renderText(
-        paste(input$text)
-    )
-})
+
+    library(ggplot2)
+    # Generate a bar plot about probabilities for each predicted words
+    output$plot <- renderPlot({
+        ggplot(result(), aes(Content, Frequency)) + 
+            geom_bar(stat="identity") + 
+            scale_x_discrete(limits= result()$Content) +
+            xlab("Predicted Word") + 
+            ylab("Probability") +             
+            coord_flip() +
+            theme_bw() +
+            theme(plot.title = element_text(size=22)) +
+            theme(axis.text.y=element_blank(),
+                  axis.text=element_text(size=12),
+                  axis.title=element_text(size=14,face="bold")) +
+            geom_text(aes(label=predicted), hjust="inward", color="blue", size=7)  
+    })
+}

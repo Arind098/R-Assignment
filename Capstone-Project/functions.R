@@ -35,6 +35,14 @@ freq.df <- function(x) {
     return(y)
 }
 
+## Checks if any thing is entered as input
+is.word <- function(x) {
+    if(is.na(x) || x == '') {
+        return(TRUE)
+    } else {}
+        return(FALSE)
+}
+
 ## Words to be considered
 clean.words <- function(x, n=1) {
     terms <- str_split(x, pattern=" ")[[1]]
