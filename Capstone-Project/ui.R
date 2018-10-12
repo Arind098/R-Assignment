@@ -42,8 +42,8 @@ shinyUI(fluidPage(
         br(),
         tabsetPanel(type = "tabs",
             tabPanel("Predicted Words",
-                plotOutput("plot", click = "Predict"),
-                br(), fluidRow(column(6, verbatimTextOutput("value")))
+                # plotOutput("plot", click = "Predict"),
+                verbatimTextOutput("value")
                 ),
             tabPanel("Summary"),
             tabPanel("Table")

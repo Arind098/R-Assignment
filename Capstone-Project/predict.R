@@ -9,26 +9,27 @@ pred.boff <- function(input, k=2) {
     count <- wordcount(input)
     matched <- data.frame()
     
-    if (count >= 4) {
+    if (count==0){
+        prediction <- "Enter something"
+    }
+    
+    if (count >= 5) {
         for (n in 4:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
-            break
+            if(nrow(matched) != 0) break
         }
-    } 
-    
-    if (count <=3 & count >0) {
+        prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
+    }
+    if (count <=4 & count >0) {
         for (n in count:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
-            break
+            if(nrow(matched) != 0) break
         }
-     } 
-    #else {
-    #     print("Enter something!!!")
-    # }
+        prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
+     }
     # Predict "k" words as per the input
-    prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
     # prediction <- matched
     return(prediction)
 }

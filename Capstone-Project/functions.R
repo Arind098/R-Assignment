@@ -62,6 +62,10 @@ search.ngram <- function(x, n) {
 }
 
 wordcount <- function(x) {
-    count <- length(str_split(x, pattern=" ")[[1]])
+    if(nchar(x)!=0){
+        count <- length(str_split(x, pattern=" ")[[1]])
+    } else {
+        count <- 0
+    }
     return(count)
 }
