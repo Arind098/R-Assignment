@@ -37,15 +37,16 @@ shinyUI(fluidPage(
     ),
     mainPanel(
                 # Text input
-        textInput("text", label = ('Enter some text'), value = ''),
+        textInput("text", label = h3('Input your text'), value = ''),
         submitButton("Predict", icon("refresh")),
         br(),
         tabsetPanel(type = "tabs",
-                tabPanel("Predicted Words", plotOutput("plot")),
-                tabPanel("Summary"),
-                tabPanel("Table")
-                )
-            )
+            tabPanel("Predicted Words",
+                plotOutput("plot", click = "Predict"),
+                br(), fluidRow(column(6, verbatimTextOutput("value")))
+                ),
+            tabPanel("Summary"),
+            tabPanel("Table")
         )
-    )
-)
+    ))
+))

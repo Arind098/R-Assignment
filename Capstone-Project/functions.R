@@ -56,8 +56,8 @@ words.considered <- function(x, n=1) {
 }
 ## search input in ngrams tokens
 search.ngram <- function(x, n) {
-    matched <- grepl(paste0("^",x), total[[n]]$Content)
-    matched <- total[[n]][matched, ]
+    matched <- grepl(paste0("^",x), ngrams.df[[n]]$Content)
+    matched <- ngrams.df[[n]][matched, ]
     return(matched)
 }
 

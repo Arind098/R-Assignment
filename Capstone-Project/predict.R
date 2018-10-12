@@ -1,6 +1,8 @@
-# create a predictive model for predicting words
 source("functions.R")
 
+# create a predictive model for predicting words
+library(readr)
+profane.words <- read_lines("profane.txt")
 
 pred.boff <- function(input, k=2) {
     input <- clean.words(input)
@@ -11,6 +13,7 @@ pred.boff <- function(input, k=2) {
         for (n in 4:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
+            break
         }
     } 
     
@@ -18,6 +21,7 @@ pred.boff <- function(input, k=2) {
         for (n in count:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
+            break
         }
      } 
     #else {
@@ -27,6 +31,5 @@ pred.boff <- function(input, k=2) {
     prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
     # prediction <- matched
     return(prediction)
-
 }
 

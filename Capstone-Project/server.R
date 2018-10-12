@@ -6,14 +6,22 @@ source("predict.R")
 source("functions.R")
 function(input, output, session) {
     # Predict Word
-    result <- eventReactive(input$Predict, {
-        pred.boff(input$text, input$slider)
+    # output$read <- eventReactive(input$Predict, {
+    #     input$text
+    # })
+    result <- observeEvent(input$Predict, {
+        pred.boff(input$text)
     })
-
+    output$value <- renderPrint({
+        input$text
+    })
+    # result <- reactive({
+    #     pred.boff(input$read, input$slider)
+    # })
     library(ggplot2)
     # Generate a bar plot about probabilities for each predicted words
     output$plot <- renderPlot({
-        ggplot(result(), aes(Content, Frequency)) + 
+        ggplot(result, aes(Content, Frequency)) + 
             geom_bar(stat="identity") + 
             scale_x_discrete(limits= result()$Content) +
             xlab("Predicted Word") + 
