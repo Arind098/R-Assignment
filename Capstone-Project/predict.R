@@ -2,7 +2,7 @@ source("functions.R")
 
 # create a predictive model for predicting words
 library(readr)
-profane.words <- read_lines("profane.txt")
+profane.words <- read_lines("data/profane.txt")
 
 df.1gram <- readRDS("data/data1.rds")
 
