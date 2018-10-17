@@ -5,18 +5,14 @@ library(readr)
 profane.words <- read_lines("data/profane.txt")
 
 df.1gram <- readRDS("data/data1.rds")
-
 df.2gram <- readRDS("data/data2.rds")
-
 df.3gram <- readRDS("data/data3.rds")
-
 df.4gram <- readRDS("data/data4.rds")
 
-# df.5gram <- readRDS("./df.5gram.rds")
+#df.5gram <- readRDS("data/data5.rds")
 
 ngrams.df <- list(df.1gram, df.2gram, df.3gram, df.4gram)
 rm(df.1gram, df.2gram, df.3gram, df.4gram)
-
 
 pred.boff <- function(input, k=2) {
     input <- clean.words(input)
@@ -43,8 +39,6 @@ pred.boff <- function(input, k=2) {
         }
         prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
      }
-    # Predict "k" words as per the input
-    # prediction <- matched
     return(prediction)
 }
 
