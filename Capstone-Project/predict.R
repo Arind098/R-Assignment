@@ -4,6 +4,20 @@ source("functions.R")
 library(readr)
 profane.words <- read_lines("profane.txt")
 
+df.1gram <- readRDS("data/df.1gram.rds")
+
+df.2gram <- readRDS("data/df.2gram.rds")
+
+df.3gram <- readRDS("data/df.3gram.rds")
+
+df.4gram <- readRDS("data/df.4gram.rds")
+
+# df.5gram <- readRDS("./df.5gram.rds")
+
+ngrams.df <- list(df.1gram, df.2gram, df.3gram, df.4gram)
+rm(df.1gram, df.2gram, df.3gram, df.4gram)
+
+
 pred.boff <- function(input, k=2) {
     input <- clean.words(input)
     count <- wordcount(input)
@@ -13,19 +27,19 @@ pred.boff <- function(input, k=2) {
         prediction <- "Enter something"
     }
     
-    if (count >= 5) {
-        for (n in 4:1) {
+    if (count >= 4) {
+        for (n in 3:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
-            if(nrow(matched) != 0) break
+            if(nrow(matched) == k) break
         }
         prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
     }
-    if (count <=4 & count >0) {
+    if (count <=3 & count >0) {
         for (n in count:1) {
             input.considered <- words.considered(input, n)
             matched <- rbind(matched, search.ngram(input.considered, n + 1))
-            if(nrow(matched) != 0) break
+            if(nrow(matched) == k) break
         }
         prediction <- stringi::stri_extract_last_words(matched[1:k, ]$Content)
      }
