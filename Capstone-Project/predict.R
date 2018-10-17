@@ -4,13 +4,13 @@ source("functions.R")
 library(readr)
 profane.words <- read_lines("profane.txt")
 
-df.1gram <- readRDS("data/df.1gram.rds")
+df.1gram <- readRDS("data/data1.rds")
 
-df.2gram <- readRDS("data/df.2gram.rds")
+df.2gram <- readRDS("data/data2.rds")
 
-df.3gram <- readRDS("data/df.3gram.rds")
+df.3gram <- readRDS("data/data3.rds")
 
-df.4gram <- readRDS("data/df.4gram.rds")
+df.4gram <- readRDS("data/data4.rds")
 
 # df.5gram <- readRDS("./df.5gram.rds")
 
