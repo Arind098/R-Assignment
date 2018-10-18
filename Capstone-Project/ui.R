@@ -44,7 +44,7 @@ shinyUI(fluidPage(navbarPage(
         tabsetPanel(type = "tabs",
                     tabPanel(
                       "Predicted Words",
-                      textOutput("Please wait while the app is loading", container = pre),
+                      textOutput("Please wait while the app is loading"),
                       verbatimTextOutput("value")
                     ))
       )
