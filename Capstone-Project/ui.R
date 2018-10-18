@@ -23,10 +23,7 @@ shinyUI(fluidPage(navbarPage(
         selectInput(
           "var",
           label = "Select a Language",
-          choices = c("English",
-                      "German",
-                      "Finnish",
-                      "Russian"),
+          choices = c("English")
           selected = "English"
         ),
         
